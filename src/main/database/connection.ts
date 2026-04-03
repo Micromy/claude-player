@@ -1,11 +1,17 @@
-import Database from 'better-sqlite3'
+import { createRequire } from 'module'
 import { app } from 'electron'
 import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
+import type BetterSqlite3 from 'better-sqlite3'
 
-let db: Database.Database | null = null
+// createRequire를 사용해 Rollup이 better-sqlite3를 번들링하지 못하도록 함
+// ES module import를 쓰면 Rollup이 bindings 패키지까지 번들링해서 .node 경로 오류 발생
+const _require = createRequire(import.meta.url)
+const Database = _require('better-sqlite3') as typeof BetterSqlite3
 
-export function getDb(): Database.Database {
+let db: BetterSqlite3.Database | null = null
+
+export function getDb(): BetterSqlite3.Database {
   if (!db) {
     throw new Error('Database not initialized. Call initDb() first.')
   }
@@ -22,7 +28,7 @@ export function initDb(): void {
   runMigrations(db)
 }
 
-function runMigrations(database: Database.Database): void {
+function runMigrations(database: BetterSqlite3.Database): void {
   database.exec(`
     CREATE TABLE IF NOT EXISTS _migrations (
       id      INTEGER PRIMARY KEY AUTOINCREMENT,
